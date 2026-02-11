@@ -59,6 +59,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
             "total_hours",
             "requirements",
             "sections",
+            "is_published",
         ]
 
 

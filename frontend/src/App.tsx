@@ -8,6 +8,11 @@ import CourseDetail from "./pages/CourseDetail";
 import MyCourses from "./pages/MyCourses";
 import MyLearning from "./pages/MyLearning";
 import CreateCourse from "./pages/CreateCourse";
+import CourseLearn from "./pages/CourseLearn";
+import ProtectedRoute from "./components/ProtectedRoute";
+import CourseBuilder from "./pages/CourseBuilder";
+import InstructorDashboard from "./pages/InstructorDashboard";
+
 
 function App() {
   return (
@@ -19,9 +24,41 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/course/:id" element={<CourseDetail />} />
-          <Route path="/my-courses" element={<MyCourses />} />
+          <Route path="/learn/:id" element={<CourseLearn />} />
+          <Route
+            path="/my-courses"
+            element={
+              <ProtectedRoute requiredCreator>
+                <MyCourses />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/instructor/course/:id"
+            element={
+              <ProtectedRoute requiredCreator>
+                <CourseBuilder />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/instructor/dashboard"
+            element={
+              <ProtectedRoute requiredCreator>
+                <InstructorDashboard />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="/my-learning" element={<MyLearning />} />
-          <Route path="/create-course" element={<CreateCourse />} />
+          <Route
+            path="/create-course"
+            element={
+              <ProtectedRoute>
+                <CreateCourse />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </div>
     </BrowserRouter>

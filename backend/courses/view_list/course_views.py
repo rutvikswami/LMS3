@@ -214,16 +214,64 @@ class MyCoursesView(generics.ListAPIView):
 
 
 
-class PublishCourseView(APIView):
+
+class TogglePublishCourseView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, course_id):
-        course = get_object_or_404(Course, id=course_id)
+    def patch(self, request, pk):
+        course = get_object_or_404(Course, pk=pk)
 
         if course.creator != request.user:
-            raise PermissionDenied("Not your course")
+            raise PermissionDenied("You can only publish your own course.")
 
-        course.is_published = True
+        course.is_published = not course.is_published
         course.save()
 
-        return Response({"status": "course published"})
+        return Response({
+            "is_published": course.is_published
+        })
+    
+
+
+class InstructorCourseDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        course = get_object_or_404(Course, pk=pk)
+
+        if course.creator != request.user:
+            raise PermissionDenied(
+                "You can only access your own courses."
+            )
+
+        serializer = CourseDetailSerializer(course)
+        return Response(serializer.data)
+
+
+class InstructorDashboardView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        courses = Course.objects.filter(creator=user)
+
+        total_courses = courses.count()
+        published_courses = courses.filter(is_published=True).count()
+        unpublished_courses = courses.filter(is_published=False).count()
+
+        total_enrollments = Enrollment.objects.filter(
+            course__creator=user
+        ).count()
+
+        total_students = Enrollment.objects.filter(
+            course__creator=user
+        ).values("user").distinct().count()
+
+        return Response({
+            "total_courses": total_courses,
+            "published_courses": published_courses,
+            "unpublished_courses": unpublished_courses,
+            "total_enrollments": total_enrollments,
+            "total_students": total_students,
+        })

@@ -14,7 +14,9 @@ from courses.view_list.course_views import (
     CourseListView,
     MyEnrollmentsView,
     MyCoursesView,
-    PublishCourseView,
+    TogglePublishCourseView,
+    InstructorDashboardView,
+    InstructorCourseDetailView,
 )
 
 urlpatterns = [
@@ -37,6 +39,10 @@ urlpatterns = [
     path("chapter/<int:pk>/delete/", DeleteChapterView.as_view()),
 
     path("<int:course_id>/enroll/", EnrollCourseView.as_view()),
-    path("<int:course_id>/publish/", PublishCourseView.as_view()),
+    path("<int:pk>/toggle-publish/", TogglePublishCourseView.as_view()),
+
+
+    path("instructor/dashboard/", InstructorDashboardView.as_view()),
+    path("instructor/course/<int:pk>/",InstructorCourseDetailView.as_view()),
 
 ]

@@ -4,11 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 
 type Props = {
   course: Course;
+  link?: string;
 };
 
-function CourseCard({ course }: Props) {
+function CourseCard({ course, link }: Props) {
+  const target = link ?? `/course/${course.id}`;
+
   return (
-    <Link to={`/course/${course.id}`}>
+    <Link to={target}>
       <Card className="hover:shadow-lg transition cursor-pointer">
         {course.thumbnail && (
           <img

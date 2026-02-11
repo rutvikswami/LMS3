@@ -2,10 +2,11 @@ import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { PERMISSIONS } from "@/constants/permissions";
+import { isAllowed } from "@/utils/auth";
+
 
 function Navbar() {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
 
   return (
     <nav className="w-full border-b bg-white">
@@ -26,11 +27,14 @@ function Navbar() {
           <Link to="/my-learning">My Learning</Link>
 
           {/* Creator link only if has create_course permission */}
-          {user?.permissions?.includes(PERMISSIONS.CREATE_COURSE) && (
-            <Link to="/my-courses">Creator</Link>
+          {isAllowed("creator") && (
+            <>
+              <Link to="/instructor/dashboard">Dashboard</Link>
+              <Link to="/my-courses">Creator</Link>
+            </>
           )}
 
-          {user ? (
+          {isAllowed() ? (
             <Button onClick={logout}>Logout</Button>
           ) : (
             <Button asChild>
