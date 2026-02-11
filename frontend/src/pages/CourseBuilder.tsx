@@ -4,140 +4,152 @@ import api from "@/api/axios";
 import type { CourseDetail, Section, Chapter } from "@/types/course";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 import { DndContext, closestCenter } from "@dnd-kit/core";
-import type { DragEndEvent } from "@dnd-kit/core";
+import type{ DragEndEvent } from "@dnd-kit/core";
 
 import {
   SortableContext,
   verticalListSortingStrategy,
-  arrayMove,
   useSortable,
+  arrayMove,
 } from "@dnd-kit/sortable";
 
 import { CSS } from "@dnd-kit/utilities";
 
 function CourseBuilder() {
   const { id } = useParams();
-
   const [course, setCourse] = useState<CourseDetail | null>(null);
-  const [newSectionTitle, setNewSectionTitle] = useState("");
 
-  const [chapterInputs, setChapterInputs] = useState<{
-    [key: number]: {
-      title: string;
-      video_url: string;
-      video_duration: number;
-    };
-  }>({});
+  const [editCourse, setEditCourse] = useState(false);
+  const [newSectionTitle, setNewSectionTitle] = useState("");
 
   useEffect(() => {
     fetchCourse();
   }, []);
 
   const fetchCourse = async () => {
-    try {
-      const res = await api.get(`/courses/instructor/course/${id}/`);
-      setCourse(res.data);
-    } catch (err) {
-      console.error("Failed to load course");
-    }
+    const res = await api.get(`/courses/instructor/course/${id}/`);
+    setCourse(res.data);
   };
 
-  // ===============================
-  // PUBLISH TOGGLE
-  // ===============================
+  if (!course) return <div>Loading...</div>;
+
+  // ============================
+  // COURSE UPDATE
+  // ============================
+
+  const handleUpdateCourse = async () => {
+    await api.patch(`/courses/${course.id}/update/`, {
+      title: course.title,
+      description: course.description,
+      requirements: course.requirements,
+    });
+
+    setEditCourse(false);
+  };
 
   const handleTogglePublish = async () => {
-    await api.patch(`/courses/${course?.id}/toggle-publish/`);
+    await api.patch(`/courses/${course.id}/toggle-publish/`);
     fetchCourse();
   };
 
-  // ===============================
-  // SECTION CREATE
-  // ===============================
+  // ============================
+  // SECTION CRUD
+  // ============================
 
   const handleAddSection = async () => {
     if (!newSectionTitle.trim()) return;
 
     await api.post("/courses/section/create/", {
-      course: id,
-      title: newSectionTitle.trim(),
+      course: course.id,
+      title: newSectionTitle,
     });
 
     setNewSectionTitle("");
     fetchCourse();
   };
 
-  // ===============================
-  // CHAPTER CREATE
-  // ===============================
+  const handleUpdateSection = async (sectionId: number, title: string) => {
+    await api.patch(`/courses/section/${sectionId}/update/`, { title });
+    fetchCourse();
+  };
 
-  const handleAddChapter = async (sectionId: number) => {
-    const input = chapterInputs[sectionId];
-    if (!input) return;
+  const handleDeleteSection = async (sectionId: number) => {
+    await api.delete(`/courses/section/${sectionId}/delete/`);
+    fetchCourse();
+  };
 
-    if (!input.title || !input.video_url || !input.video_duration) {
-      alert("All fields required");
-      return;
-    }
+  const handleSectionDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
 
-    await api.post("/courses/chapter/create/", {
-      section: sectionId,
-      title: input.title,
-      video_url: input.video_url,
-      video_duration: input.video_duration,
+    const oldIndex = course.sections.findIndex((s) => s.id === active.id);
+    const newIndex = course.sections.findIndex((s) => s.id === over.id);
+
+    const newSections = arrayMove(course.sections, oldIndex, newIndex);
+
+    setCourse({
+      ...course,
+      sections: newSections,
     });
 
-    setChapterInputs((prev) => ({
-      ...prev,
-      [sectionId]: {
-        title: "",
-        video_url: "",
-        video_duration: 0,
-      },
-    }));
+    await api.patch("/courses/section/reorder/", {
+      sections: newSections.map((s, index) => ({
+        id: s.id,
+        order: index + 1,
+      })),
+    });
+  };
+
+  // ============================
+  // CHAPTER CRUD
+  // ============================
+
+  const handleAddChapter = async (sectionId: number) => {
+    await api.post("/courses/chapter/create/", {
+      section: sectionId,
+      title: "New Chapter",
+      video_url: "",
+      video_duration: 0,
+    });
 
     fetchCourse();
   };
 
-  // ===============================
-  // CHAPTER DELETE
-  // ===============================
+  const handleUpdateChapter = async (
+    chapterId: number,
+    data: Partial<Chapter>,
+  ) => {
+    await api.patch(`/courses/chapter/${chapterId}/update/`, data);
+    fetchCourse();
+  };
 
   const handleDeleteChapter = async (chapterId: number) => {
     await api.delete(`/courses/chapter/${chapterId}/delete/`);
     fetchCourse();
   };
 
-  // ===============================
-  // DRAG REORDER
-  // ===============================
-
-  const handleDragEnd = async (event: DragEndEvent, section: Section) => {
+  const handleChapterDragEnd = async (
+    event: DragEndEvent,
+    section: Section,
+  ) => {
     const { active, over } = event;
-
     if (!over || active.id === over.id) return;
 
     const oldIndex = section.chapters.findIndex((c) => c.id === active.id);
-
     const newIndex = section.chapters.findIndex((c) => c.id === over.id);
 
     const newChapters = arrayMove(section.chapters, oldIndex, newIndex);
 
-    // Update UI instantly
-    setCourse((prev) => {
-      if (!prev) return prev;
-
-      return {
-        ...prev,
-        sections: prev.sections.map((s) =>
-          s.id === section.id ? { ...s, chapters: newChapters } : s,
-        ),
-      };
+    setCourse({
+      ...course,
+      sections: course.sections.map((s) =>
+        s.id === section.id ? { ...s, chapters: newChapters } : s,
+      ),
     });
 
-    // Send to backend
     await api.patch("/courses/chapter/reorder/", {
       section_id: section.id,
       chapters: newChapters.map((c, index) => ({
@@ -147,13 +159,42 @@ function CourseBuilder() {
     });
   };
 
-  if (!course) return <div>Loading...</div>;
+  // ============================
+  // RENDER
+  // ============================
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      {/* HEADER */}
-      <div className="flex items-center gap-4">
-        <h1 className="text-3xl font-bold">Course Builder: {course.title}</h1>
+      {/* COURSE HEADER */}
+      <div className="space-y-4">
+        {editCourse ? (
+          <>
+            <Input
+              value={course.title}
+              onChange={(e) =>
+                setCourse({
+                  ...course,
+                  title: e.target.value,
+                })
+              }
+            />
+            <Textarea
+              value={course.description}
+              onChange={(e) =>
+                setCourse({
+                  ...course,
+                  description: e.target.value,
+                })
+              }
+            />
+            <Button onClick={handleUpdateCourse}>Save</Button>
+          </>
+        ) : (
+          <>
+            <h1 className="text-3xl font-bold">{course.title}</h1>
+            <Button onClick={() => setEditCourse(true)}>Edit Course</Button>
+          </>
+        )}
 
         <Button onClick={handleTogglePublish}>
           {course.is_published ? "Unpublish" : "Publish"}
@@ -163,109 +204,119 @@ function CourseBuilder() {
       {/* ADD SECTION */}
       <div className="flex gap-4">
         <Input
-          placeholder="New section title"
+          placeholder="New section"
           value={newSectionTitle}
           onChange={(e) => setNewSectionTitle(e.target.value)}
         />
         <Button onClick={handleAddSection}>Add Section</Button>
       </div>
 
-      {/* SECTIONS */}
-      {course.sections.map((section) => (
-        <div key={section.id} className="border rounded-lg p-4 space-y-4">
-          <h2 className="text-lg font-semibold">{section.title}</h2>
-
-          {/* DRAG CONTEXT */}
-          <DndContext
-            collisionDetection={closestCenter}
-            onDragEnd={(e) => handleDragEnd(e, section)}
-          >
-            <SortableContext
-              items={section.chapters.map((c) => c.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              {section.chapters.map((chapter) => (
-                <SortableItem
-                  key={chapter.id}
-                  chapter={chapter}
-                  onDelete={handleDeleteChapter}
-                />
-              ))}
-            </SortableContext>
-          </DndContext>
-
-          {/* ADD CHAPTER */}
-          <div className="flex flex-col gap-2 mt-4">
-            <Input
-              placeholder="Chapter title"
-              value={chapterInputs[section.id]?.title || ""}
-              onChange={(e) =>
-                setChapterInputs((prev) => ({
-                  ...prev,
-                  [section.id]: {
-                    ...prev[section.id],
-                    title: e.target.value,
-                    video_url: prev[section.id]?.video_url || "",
-                    video_duration: prev[section.id]?.video_duration || 0,
-                  },
-                }))
-              }
+      {/* SECTIONS DRAG */}
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragEnd={handleSectionDragEnd}
+      >
+        <SortableContext
+          items={course.sections.map((s) => s.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {course.sections.map((section) => (
+            <SectionItem
+              key={section.id}
+              section={section}
+              onUpdateSection={handleUpdateSection}
+              onDeleteSection={handleDeleteSection}
+              onAddChapter={handleAddChapter}
+              onUpdateChapter={handleUpdateChapter}
+              onDeleteChapter={handleDeleteChapter}
+              onChapterDragEnd={handleChapterDragEnd}
             />
-
-            <Input
-              placeholder="Video URL"
-              value={chapterInputs[section.id]?.video_url || ""}
-              onChange={(e) =>
-                setChapterInputs((prev) => ({
-                  ...prev,
-                  [section.id]: {
-                    ...prev[section.id],
-                    title: prev[section.id]?.title || "",
-                    video_url: e.target.value,
-                    video_duration: prev[section.id]?.video_duration || 0,
-                  },
-                }))
-              }
-            />
-
-            <Input
-              type="number"
-              placeholder="Video Duration"
-              value={chapterInputs[section.id]?.video_duration || ""}
-              onChange={(e) =>
-                setChapterInputs((prev) => ({
-                  ...prev,
-                  [section.id]: {
-                    ...prev[section.id],
-                    title: prev[section.id]?.title || "",
-                    video_url: prev[section.id]?.video_url || "",
-                    video_duration: Number(e.target.value),
-                  },
-                }))
-              }
-            />
-
-            <Button onClick={() => handleAddChapter(section.id)}>
-              Add Chapter
-            </Button>
-          </div>
-        </div>
-      ))}
+          ))}
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }
 
 export default CourseBuilder;
 
-// ===============================
-// SORTABLE ITEM COMPONENT
-// ===============================
+function SectionItem({
+  section,
+  onUpdateSection,
+  onDeleteSection,
+  onAddChapter,
+  onUpdateChapter,
+  onDeleteChapter,
+  onChapterDragEnd,
+}: any) {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: section.id });
 
-function SortableItem({
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const [editTitle, setEditTitle] = useState(section.title);
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="border p-4 rounded space-y-4 bg-white"
+    >
+      <div {...attributes} {...listeners} className="cursor-grab font-semibold">
+        Section Drag
+      </div>
+
+      <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+
+      <div className="flex gap-2">
+        <Button onClick={() => onUpdateSection(section.id, editTitle)}>
+          Save
+        </Button>
+
+        <Button
+          variant="destructive"
+          onClick={() => onDeleteSection(section.id)}
+        >
+          Delete
+        </Button>
+      </div>
+
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragEnd={(e) => onChapterDragEnd(e, section)}
+      >
+        <SortableContext
+          items={section.chapters.map((c: any) => c.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {section.chapters.map((chapter: any) => (
+            <ChapterItem
+              key={chapter.id}
+              chapter={chapter}
+              onUpdate={onUpdateChapter}
+              onDelete={onDeleteChapter}
+            />
+          ))}
+        </SortableContext>
+      </DndContext>
+
+      <Button variant="secondary" onClick={() => onAddChapter(section.id)}>
+        Add Chapter
+      </Button>
+    </div>
+  );
+}
+
+function ChapterItem({
   chapter,
+  onUpdate,
   onDelete,
 }: {
-  chapter: Chapter;
+  chapter: any;
+  onUpdate: (id: number, data: any) => void;
   onDelete: (id: number) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -276,23 +327,78 @@ function SortableItem({
     transition,
   };
 
+  const [editData, setEditData] = useState({
+    title: chapter.title || "",
+    video_url: chapter.video_url || "",
+    video_duration: chapter.video_duration || 0,
+  });
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className="p-3 bg-gray-100 rounded flex justify-between items-center cursor-grab"
+      className="p-4 bg-gray-100 rounded space-y-3"
     >
-      <span>{chapter.title}</span>
-
-      <Button
-        size="sm"
-        variant="destructive"
-        onClick={() => onDelete(chapter.id)}
+      {/* Drag Handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab text-sm text-gray-500"
       >
-        Delete
-      </Button>
+        ☰ Drag
+      </div>
+
+      {/* Title */}
+      <Input
+        placeholder="Chapter Title"
+        value={editData.title}
+        onChange={(e) =>
+          setEditData({
+            ...editData,
+            title: e.target.value,
+          })
+        }
+      />
+
+      {/* Video URL */}
+      <Input
+        placeholder="Video URL"
+        value={editData.video_url}
+        onChange={(e) =>
+          setEditData({
+            ...editData,
+            video_url: e.target.value,
+          })
+        }
+      />
+
+      {/* Duration */}
+      <Input
+        type="number"
+        placeholder="Video Duration (hours)"
+        value={editData.video_duration}
+        onChange={(e) =>
+          setEditData({
+            ...editData,
+            video_duration: Number(e.target.value),
+          })
+        }
+      />
+
+      {/* Actions */}
+      <div className="flex gap-2">
+        <Button size="sm" onClick={() => onUpdate(chapter.id, editData)}>
+          Save
+        </Button>
+
+        <Button
+          size="sm"
+          variant="destructive"
+          onClick={() => onDelete(chapter.id)}
+        >
+          Delete
+        </Button>
+      </div>
     </div>
   );
 }
