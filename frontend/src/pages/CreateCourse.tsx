@@ -9,23 +9,31 @@ function CreateCourse() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [requirements, setRequirements] = useState("");
-  const navigate = useNavigate();
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("requirements", requirements);
+
+    if (thumbnail) {
+      formData.append("thumbnail", thumbnail);
+    }
+
     try {
-      const res = await api.post("/courses/create/", {
-        title,
-        description,
-        requirements,
+      await api.post("/courses/create/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
-      navigate(`/course/${res.data.id}`);
+      alert("Course created successfully");
     } catch (err: any) {
-      // alert("Failed to create course");
       console.log(err.response?.data);
-      alert(JSON.stringify(err.response?.data));
     }
   };
 
@@ -44,6 +52,12 @@ function CreateCourse() {
           placeholder="Course description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+        />
+
+        <Input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setThumbnail(e.target.files?.[0] || null)}
         />
 
         <Textarea

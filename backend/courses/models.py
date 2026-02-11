@@ -12,8 +12,7 @@ class Course(models.Model):
     )
     title = models.CharField(max_length=255)
     description = models.TextField()
-    thumbnail = models.ImageField(upload_to="course_thumbnails/", null=True, blank=True)
-    total_hours = models.FloatField(default=0)
+    thumbnail = models.ImageField(upload_to="thumbnails/", null=True, blank=True)
     requirements = models.TextField(blank=True)
     is_published = models.BooleanField(default=False)
 

@@ -55,102 +55,42 @@ class CourseDetailView(generics.RetrieveAPIView):
         context = super().get_serializer_context()
         context["request"] = self.request
         return context
-    
-class CreateSectionView(generics.CreateAPIView):
-    serializer_class = SectionSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
-    def perform_create(self, serializer):
-        user = self.request.user
-        course_id = self.request.data.get("course")
 
-        if not course_id:
-            raise PermissionDenied("Course ID is required")
+class CourseListView(generics.ListAPIView):
+    serializer_class = CourseListSerializer
+    permission_classes = [permissions.AllowAny]
 
-        course = get_object_or_404(Course, id=course_id)
-
-        if course.creator != user:
-            raise PermissionDenied("You can only modify your own course")
-
-        serializer.save(course=course)
-
-class UpdateSectionView(generics.UpdateAPIView):
-    queryset = Section.objects.all()
-    serializer_class = SectionSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_object(self):
-        section = super().get_object()
-        user = self.request.user
-
-        if section.course.creator != user:
-            raise PermissionDenied("You can only modify your own course")
-
-        return section
     
 
-class DeleteSectionView(generics.DestroyAPIView):
-    queryset = Section.objects.all()
+    def get_queryset(self):
+        return Course.objects.filter(is_published = True)
+
+
+
+class MyCoursesView(generics.ListAPIView):
+    serializer_class = CourseListSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_object(self):
-        section = super().get_object()
-        user = self.request.user
+    def get_queryset(self):
+        return Course.objects.filter(
+            creator=self.request.user
+        )
 
-        if section.course.creator != user:
-            raise PermissionDenied("You can only modify your own course")
-
-        return section
-
-
-class CreateChapterView(generics.CreateAPIView):
-    serializer_class = ChapterSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def perform_create(self, serializer):
-        user = self.request.user
-        section_id = self.request.data.get("section")
-
-        if not section_id:
-            raise PermissionDenied("Section ID is required")
-
-        section = get_object_or_404(Section, id=section_id)
-        course = section.course
-
-        if course.creator != user:
-            raise PermissionDenied("You can only modify your own course")
-
-        serializer.save(section=section)
-
-class UpdateChapterView(generics.UpdateAPIView):
-    queryset = Chapter.objects.all()
-    serializer_class = ChapterSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_object(self):
-        chapter = super().get_object()
-        user = self.request.user
-
-        if chapter.section.course.creator != user:
-            raise PermissionDenied("You can only modify your own course")
-
-        return chapter
-
-class DeleteChapterView(generics.DestroyAPIView):
-    queryset = Chapter.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_object(self):
-        chapter = super().get_object()
-        user = self.request.user
-
-        if chapter.section.course.creator != user:
-            raise PermissionDenied("You can only modify your own course")
-
-        return chapter
 
 
 ENROLL_COURSE = 5
+
+
+
+class MyEnrollmentsView(generics.ListAPIView):
+    serializer_class = CourseListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Course.objects.filter(
+            enrollments__user=self.request.user
+        )
 
 
 class EnrollCourseView(APIView):
@@ -182,36 +122,6 @@ class EnrollCourseView(APIView):
             return Response({"status": "enrolled"}, status=201)
         else:
             return Response({"status": "already enrolled"}, status=200)
-
-
-
-class CourseListView(generics.ListAPIView):
-    serializer_class = CourseListSerializer
-    permission_classes = [permissions.AllowAny]
-
-    def get_queryset(self):
-        return Course.objects.filter(is_published = True)
-
-
-class MyEnrollmentsView(generics.ListAPIView):
-    serializer_class = CourseListSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return Course.objects.filter(
-            enrollments__user=self.request.user
-        )
-
-
-class MyCoursesView(generics.ListAPIView):
-    serializer_class = CourseListSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return Course.objects.filter(
-            creator=self.request.user
-        )
-
 
 
 
@@ -275,3 +185,30 @@ class InstructorDashboardView(APIView):
             "total_enrollments": total_enrollments,
             "total_students": total_students,
         })
+
+
+
+class LearnCourseView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        course = get_object_or_404(Course, pk=pk)
+
+        # Allow creator
+        if course.creator == request.user:
+            serializer = CourseDetailSerializer(course)
+            return Response(serializer.data)
+
+        # Allow enrolled students
+        is_enrolled = Enrollment.objects.filter(
+            user=request.user,
+            course=course
+        ).exists()
+
+        if not is_enrolled:
+            raise PermissionDenied(
+                "You must enroll to access this course."
+            )
+
+        serializer = CourseDetailSerializer(course)
+        return Response(serializer.data)

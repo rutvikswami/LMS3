@@ -4,6 +4,7 @@ export type Course = {
   thumbnail: string | null;
   total_hours: number;
   creator_name: string;
+  creator_id?: number;
 };
 
 export type Chapter = {

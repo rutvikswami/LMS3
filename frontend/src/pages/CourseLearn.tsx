@@ -8,23 +8,29 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import { useNavigate } from "react-router-dom";
 
 function CourseLearn() {
   const { id } = useParams();
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const res = await api.get(`/courses/${id}/`);
+        const res = await api.get(`/courses/learn/${id}/`);
         setCourse(res.data);
 
         const firstChapter = res.data.sections?.[0]?.chapters?.[0] || null;
 
         setCurrentChapter(firstChapter);
-      } catch (err) {
-        console.error("Failed to load course");
+      } catch (err: any) {
+        if (err.response?.status === 403) {
+          navigate(`/course/${id}`);
+        } else {
+          console.error("Failed to load course");
+        }
       }
     };
 

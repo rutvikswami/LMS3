@@ -12,6 +12,9 @@ import CourseLearn from "./pages/CourseLearn";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CourseBuilder from "./pages/CourseBuilder";
 import InstructorDashboard from "./pages/InstructorDashboard";
+import Footer from "./components/Footer";
+import InstructorRequest from "./pages/InstructorRequest";
+
 
 
 function App() {
@@ -24,7 +27,14 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/course/:id" element={<CourseDetail />} />
-          <Route path="/learn/:id" element={<CourseLearn />} />
+          <Route
+            path="/learn/:id"
+            element={
+              <ProtectedRoute>
+                <CourseLearn />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/my-courses"
             element={
@@ -50,7 +60,14 @@ function App() {
             }
           />
 
-          <Route path="/my-learning" element={<MyLearning />} />
+          <Route
+            path="/my-learning"
+            element={
+              <ProtectedRoute>
+                <MyLearning />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/create-course"
             element={
@@ -59,8 +76,18 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/become-instructor"
+            element={
+              <ProtectedRoute>
+                <InstructorRequest />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </div>
+
+      <Footer />
     </BrowserRouter>
   );
 }

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Course, Section, Chapter, Enrollment
-
+from django.db.models import Sum
 
 class ChapterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,7 +11,7 @@ class ChapterSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         user = request.user if request else None
     
-        if not user or user.is_authenticated:
+        if not user or not user.is_authenticated:
             return None
 
         if obj.section.course.enrollments.filter(user=user).exists():
@@ -33,6 +33,10 @@ class SectionSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+
+    
+    total_hours = serializers.SerializerMethodField()
+
     class Meta:
         model = Course
         fields = [
@@ -40,14 +44,24 @@ class CourseSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "thumbnail",
-            "total_hours",
             "requirements",
+            "total_hours",
         ]
         read_only_fields = ["total_hours"]
 
 
+    def get_total_hours(self, obj):
+        total_hours = Chapter.objects.filter(
+            section__course=obj
+        ).aggregate(
+            total = Sum("video_duration")
+        )["total"] or 0
+        return total_hours    
+
+
 class CourseDetailSerializer(serializers.ModelSerializer):
     sections = SectionSerializer(many=True, read_only=True)
+    total_hours = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -56,12 +70,19 @@ class CourseDetailSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "thumbnail",
-            "total_hours",
             "requirements",
+            "total_hours",
             "sections",
             "is_published",
         ]
 
+    def get_total_hours(self, obj):
+        total_hours = Chapter.objects.filter(
+            section__course=obj
+        ).aggregate(
+            total = Sum("video_duration")
+        )["total"] or 0
+        return total_hours
 
 class EnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -72,6 +93,15 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 
 class CourseListSerializer(serializers.ModelSerializer):
     creator_name = serializers.CharField(source="creator.user_name", read_only=True)
+    
+    total_hours = serializers.SerializerMethodField()
+
+    
+    creator_id = serializers.IntegerField(
+        source="creator.id",
+        read_only=True
+    )
+
 
     class Meta:
         model = Course
@@ -81,4 +111,13 @@ class CourseListSerializer(serializers.ModelSerializer):
             "thumbnail",
             "total_hours",
             "creator_name",
+            "creator_id",
         ]
+
+    def get_total_hours(self, obj):
+        total_hours = Chapter.objects.filter(
+            section__course=obj
+        ).aggregate(
+            total = Sum("video_duration")
+        )["total"] or 0
+        return total_hours

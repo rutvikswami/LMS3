@@ -24,9 +24,15 @@ function Navbar() {
 
         <div className="flex items-center gap-6">
           <Link to="/">Home</Link>
-          <Link to="/my-learning">My Learning</Link>
 
-          {/* Creator link only if has create_course permission */}
+          {isAllowed() && <Link to="/my-learning">My Learning</Link>}
+
+          {/* Show Become Instructor if logged in but not creator */}
+          {isAllowed() && !isAllowed("creator") && (
+            <Link to="/become-instructor">Become Instructor</Link>
+          )}
+
+          {/* Creator links */}
           {isAllowed("creator") && (
             <>
               <Link to="/instructor/dashboard">Dashboard</Link>

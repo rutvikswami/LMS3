@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import Group
-from .models import User
+from .models import User, InstructorRequest
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -40,3 +40,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         }
 
         return data
+    
+
+
+class InstructorRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InstructorRequest
+        fields = "__all__"
+        read_only_fields = ["user", "status"]
