@@ -49,7 +49,6 @@ class UpdateCourseView(generics.UpdateAPIView):
 class CourseDetailView(generics.RetrieveAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseDetailSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

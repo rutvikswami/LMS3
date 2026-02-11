@@ -13,6 +13,7 @@ type AuthContextType = {
   enrolledCourses: number[];
   login: (data: any) => void;
   logout: () => void;
+  fetchEnrollments: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -36,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+      fetchEnrollments();
     }
   }, []);
 
@@ -51,10 +53,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     localStorage.clear();
     setUser(null);
+    setEnrolledCourses([]);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, enrolledCourses }}>
+    <AuthContext.Provider value={{ user, login, logout, enrolledCourses, fetchEnrollments }}>
       {children}
     </AuthContext.Provider>
   );

@@ -3,10 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "@/api/axios";
 import type { CourseDetail } from "@/types/course";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 
 function CourseDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { fetchEnrollments } = useAuth();
   const [course, setCourse] = useState<CourseDetail | null>(null);
 
   useEffect(() => {
@@ -25,6 +27,7 @@ function CourseDetailPage() {
   const handleEnroll = async () => {
     try {
       await api.post(`/courses/${id}/enroll/`);
+      await fetchEnrollments();
       navigate(`/learn/${id}`);
     } catch (err) {
       alert("Enrollment failed");
