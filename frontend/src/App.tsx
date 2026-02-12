@@ -15,13 +15,14 @@ import InstructorDashboard from "./pages/InstructorDashboard";
 import Footer from "./components/Footer";
 import InstructorRequest from "./pages/InstructorRequest";
 
+{/* <div className="w-full min-h-[calc(100vh-64px)] flex flex-col"></div> */}
 
 
 function App() {
   return (
     <BrowserRouter>
       <Navbar />
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="w-full min-h-[calc(100vh-64px)] flex flex-col">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />

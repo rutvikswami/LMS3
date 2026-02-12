@@ -20,10 +20,14 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-
   const [enrolledCourses, setEnrolledCourses] = useState<number[]>([]);
 
+  // ===============================
+  // FETCH ENROLLMENTS (SAFE)
+  // ===============================
   const fetchEnrollments = async () => {
+    if (!user) return; // ✅ important safety check
+
     try {
       const res = await api.get("/courses/my-enrollments/");
       const ids = res.data.map((c: any) => c.id);
@@ -33,23 +37,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // ===============================
+  // LOAD USER FROM LOCALSTORAGE
+  // ===============================
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
+
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      fetchEnrollments();
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
     }
   }, []);
 
+  // ===============================
+  // FETCH ENROLLMENTS WHEN USER CHANGES
+  // ===============================
+  useEffect(() => {
+    if (user) {
+      fetchEnrollments();
+    }
+  }, [user]);
+
+  // ===============================
+  // LOGIN
+  // ===============================
   const login = (data: any) => {
     localStorage.setItem("access", data.access);
     localStorage.setItem("refresh", data.refresh);
     localStorage.setItem("user", JSON.stringify(data.user));
-    setUser(data.user);
 
-    fetchEnrollments();
+    setUser(data.user);
   };
 
+  // ===============================
+  // LOGOUT
+  // ===============================
   const logout = () => {
     localStorage.clear();
     setUser(null);
@@ -57,7 +79,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, enrolledCourses, fetchEnrollments }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        enrolledCourses,
+        login,
+        logout,
+        fetchEnrollments,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

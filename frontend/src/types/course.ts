@@ -31,4 +31,5 @@ export type CourseDetail = {
   requirements: string;
   sections: Section[];
   is_published: boolean;
+  creator_name?: string;
 };

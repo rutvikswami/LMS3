@@ -1,27 +1,25 @@
-import React, { createContext, useContext } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { Clock, User, PlayCircle, BookOpen } from "lucide-react";
+import {
+  Clock,
+  User,
+  PlayCircle,
+  BookOpen,
+  ArrowRight,
+  Star,
+} from "lucide-react";
 
 // shadcn components
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+
+// Project Imports (Underlying code preserved)
+import { useAuth } from "@/context/AuthContext";
+import { isAllowed } from "@/utils/auth";
 
 // Types
 import type { Course } from "@/types/course";
-
-/** * NOTE FOR PREVIEW: Mocking dependencies to prevent compilation errors in this environment.
- * In your project, these will resolve correctly from your existing files.
- */
-// import { useAuth } from "@/context/AuthContext";
-// import { isAllowed } from "@/utils/auth";
-
-// --- MOCK LOGIC (Remove in your local project) ---
-const AuthContext = createContext({
-  user: { id: 1 },
-  enrolledCourses: [1, 2] as number[],
-});
-const useAuth = () => useContext(AuthContext);
-const isAllowed = (perm: string) => true;
-// --- END MOCK ---
 
 type Props = {
   course: Course;
@@ -46,56 +44,85 @@ function CourseCard({ course, link }: Props) {
 
   return (
     <Link to={getTargetLink()} className="block group">
-      <Card className="h-full overflow-hidden border-none bg-card hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1 active:scale-[0.99]">
-        {/* Image Container with tighter Aspect Ratio */}
-        <div className="relative aspect-video w-full overflow-hidden bg-muted">
+      <Card className="h-full overflow-hidden border-slate-200 bg-white hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/20 transition-all duration-500 transform hover:-translate-y-2 active:scale-[0.99] rounded-3xl relative">
+        {/* Thumbnail Container */}
+        <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
           {course.thumbnail ? (
             <img
               src={course.thumbnail}
               alt={course.title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground/20">
-              <BookOpen className="w-10 h-10" />
+            <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-50 to-slate-100 text-slate-300">
+              <BookOpen className="w-12 h-12" />
             </div>
           )}
 
-          {/* Overlay on hover */}
-          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <div className="bg-white/90 p-2.5 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-              <PlayCircle className="w-5 h-5 text-primary fill-current" />
+          {/* Glassmorphism Hover Overlay */}
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 backdrop-blur-[2px] flex items-center justify-center">
+            <div className="bg-white/90 p-4 rounded-full shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+              <PlayCircle className="w-8 h-8 text-primary fill-current" />
+            </div>
+          </div>
+
+          {/* Badges */}
+          <div className="absolute top-3 left-3 flex gap-2">
+            <Badge
+              variant="secondary"
+              className="bg-white/90 backdrop-blur-md border-none text-[10px] font-bold uppercase tracking-wider text-primary shadow-sm"
+            >
+              Professional
+            </Badge>
+          </div>
+
+          <div className="absolute bottom-3 right-3">
+            <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg text-white text-[10px] font-medium border border-white/10">
+              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+              <span>4.8</span>
             </div>
           </div>
         </div>
 
-        <CardContent className="p-3.5 space-y-2.5">
-          <div className="space-y-1.5">
-            <h3 className="font-bold text-[15px] leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors min-h-[40px]">
-              {course.title}
-            </h3>
-
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-primary/10">
-                <User className="w-2.5 h-2.5 text-primary" />
+        <CardContent className="p-5 space-y-4">
+          <div className="space-y-3">
+            {/* Creator Attribution */}
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 border border-slate-200 overflow-hidden">
+                <User className="w-3.5 h-3.5 text-slate-500" />
               </div>
-              <span className="text-[11px] font-medium truncate">
+              <span className="text-[11px] font-semibold text-slate-500 truncate max-w-[150px]">
                 {course.creator_name}
               </span>
             </div>
+
+            <h3 className="font-bold text-lg leading-snug tracking-tight text-slate-900 group-hover:text-primary transition-colors min-h-[3rem] line-clamp-2">
+              {course.title}
+            </h3>
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-muted/30">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Clock className="w-3 h-3" />
-              <span className="text-[11px] font-bold tracking-tight">
-                {course.total_hours?.toFixed(1)} hrs
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+
+          {/* Bottom Meta Information */}
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center gap-2 text-slate-500">
+              <div className="p-1.5 rounded-md bg-slate-50">
+                <Clock className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+              <span className="text-xs font-bold text-slate-600">
+                {course.total_hours?.toFixed(1)}{" "}
+                <span className="text-slate-400 font-medium">Hrs</span>
               </span>
             </div>
 
-            <div className="text-[10px] font-black uppercase tracking-wider text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-              Go <PlayCircle className="w-2.5 h-2.5" />
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-0 text-primary hover:bg-transparent font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 group-hover:translate-x-0 translate-x-4 transition-all"
+            >
+              Learn
+              <ArrowRight className="ml-1.5 w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+            </Button>
           </div>
         </CardContent>
       </Card>

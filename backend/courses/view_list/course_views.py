@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from courses.models import Chapter, Course, Section, Enrollment
 from courses.serializers import (
@@ -34,6 +35,7 @@ class CreateCourseView(generics.CreateAPIView):
 class UpdateCourseView(generics.UpdateAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_object(self):
         course = super().get_object()
