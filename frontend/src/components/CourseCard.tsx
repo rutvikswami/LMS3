@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 
 // Project Imports (Underlying code preserved)
 import { useAuth } from "@/context/AuthContext";
-import { isAllowed } from "@/utils/auth";
+import Authorization from "@/utils/auth";
 
 // Types
 import type { Course } from "@/types/course";
@@ -33,7 +33,10 @@ function CourseCard({ course, link }: Props) {
   const getTargetLink = () => {
     if (link) return link;
     if (!user) return `/course/${course.id}`;
-    if (isAllowed("creator") && course.creator_id === user.id) {
+    if (
+      Authorization.isAuthenticated("create_course") &&
+      course.creator_id === user.id
+    ) {
       return `/learn/${course.id}`;
     }
     if (enrolledCourses.includes(course.id)) {

@@ -9,6 +9,7 @@ import {
   GraduationCap,
   Menu,
 } from "lucide-react";
+import Authorization from "@/utils/auth";
 
 // shadcn components
 import { Input } from "@/components/ui/input";
@@ -25,12 +26,21 @@ import {
  * The code below is designed for your 'lms_v3' project structure.
  */
 import { useAuth } from "@/context/AuthContext";
-import { isAllowed } from "@/utils/auth";
 
 export default function Navbar() {
   const { logout } = useAuth();
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if(!search.trim()) {
+      navigate("/");
+      return;
+    }
+    navigate(`/?search=${search}`);
+  }
 
   const handleLogout = () => {
     logout();
@@ -57,15 +67,20 @@ export default function Navbar() {
           <div
             className={`relative w-full max-w-[320px] hidden md:block transition-all duration-500 ease-in-out ${isSearchFocused ? "max-w-[420px]" : ""}`}
           >
-            <Search
+            <form onSubmit={handleSearch}>
+              <Search
               className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors duration-300 ${isSearchFocused ? "text-primary" : "text-muted-foreground"}`}
-            />
-            <Input
+              />
+
+              <Input 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setIsSearchFocused(false)}
-              placeholder="Search for courses..."
+              placeholder="search for courses..."
               className="pl-11 h-11 bg-muted/40 border-transparent focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/10 transition-all rounded-2xl shadow-none"
-            />
+              />
+            </form>
           </div>
         </div>
 
@@ -79,7 +94,7 @@ export default function Navbar() {
               Home
             </Link>
 
-            {isAllowed() && (
+            {Authorization.isAuthenticated() && (
               <Link
                 to="/my-learning"
                 className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors"
@@ -88,18 +103,19 @@ export default function Navbar() {
               </Link>
             )}
 
-            {isAllowed() && !isAllowed("creator") && (
-              <Link
-                to="/become-instructor"
-                className="text-sm font-bold text-primary hover:opacity-80 transition-opacity"
-              >
-                Become Instructor
-              </Link>
-            )}
+            {Authorization.isAuthenticated() &&
+              !Authorization.isAuthenticated("create_course") && (
+                <Link
+                  to="/become-instructor"
+                  className="text-sm font-bold text-primary hover:opacity-80 transition-opacity"
+                >
+                  Become Instructor
+                </Link>
+              )}
           </nav>
 
           <div className="flex items-center gap-2">
-            {isAllowed() ? (
+            {Authorization.isAuthenticated() ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -114,7 +130,7 @@ export default function Navbar() {
                   align="end"
                   className="w-56 mt-3 p-2 rounded-2xl shadow-2xl border-muted-foreground/10 animate-in fade-in zoom-in-95"
                 >
-                  {isAllowed("creator") && (
+                  {Authorization.isAuthenticated("create_course") && (
                     <>
                       <div className="p-1 space-y-1">
                         <DropdownMenuItem

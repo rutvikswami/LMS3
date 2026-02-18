@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { isAllowed } from "@/utils/auth";
+import Authorization from "@/utils/auth";
 
 function ProtectedRoute({
   children,
@@ -9,12 +9,12 @@ function ProtectedRoute({
   requiredCreator?: boolean;
 }) {
   // Check authentication (default behavior)
-  if (!isAllowed()) {
+  if (!Authorization.isAuthenticated()) {
     return <Navigate to="/login" />;
   }
 
   // Check creator permission if required
-  if (requiredCreator && !isAllowed("creator")) {
+  if (requiredCreator && !Authorization.isAuthenticated("create_course")) {
     return <Navigate to="/" />;
   }
 

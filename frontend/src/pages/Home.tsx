@@ -7,15 +7,21 @@ import HomeBanner from "@/components/HomeBanner";
 // shadcn components
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useLocation } from "react-router-dom";
 
 function Home() {
   const [courses, setCourses] = useState<Course[]>([]);
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const searchQuery = queryParams.get("search")
 
   // Logic: Unchanged as per instructions
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const res = await api.get("/courses/");
+        const res = await api.get("/courses/", {
+          params: searchQuery ? {search: searchQuery}: {}
+        });
         setCourses(res.data);
       } catch (err) {
         console.error("Failed to load courses");
@@ -23,7 +29,7 @@ function Home() {
     };
 
     fetchCourses();
-  }, []);
+  }, [searchQuery]);
 
   return (
     <div className="min-h-screen bg-[#fafbfc]">

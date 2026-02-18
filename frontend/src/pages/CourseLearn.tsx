@@ -1,18 +1,15 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   Play,
   CheckCircle2,
   ArrowLeft,
-  Cpu,
   Clock,
-  BookOpen,
   User,
   Maximize2,
   Minimize2,
   ListVideo,
   Info,
-  ShieldCheck,
   Layout,
   MessageSquare,
   StickyNote,
@@ -22,9 +19,7 @@ import {
 
 // shadcn components
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -35,7 +30,7 @@ import {
 } from "@/components/ui/accordion";
 
 import api from "@/api/axios";
-import type { CourseDetail, Section, Chapter } from "@/types/course";
+import type { CourseDetail, Chapter } from "@/types/course";
 
 function CourseLearn() {
   const { id } = useParams<{ id: string }>();

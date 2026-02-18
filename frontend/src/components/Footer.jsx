@@ -8,12 +8,23 @@ import {
   Mail,
   Sparkles,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import Authorization from "@/utils/auth";
 
 // shadcn components
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 
 function Footer() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  }
+
   return (
     <footer className="relative bg-[#0a0c10] border-t border-white/5 mt-20 overflow-hidden">
       {/* Visual Accent: Top Gradient Line */}
@@ -66,21 +77,47 @@ function Footer() {
               Navigation
             </h3>
             <ul className="space-y-4">
-              {["Home", "My Learning", "Login"].map((text) => (
-                <li key={text}>
-                  <Link
-                    to={
-                      text === "Home"
-                        ? "/"
-                        : `/${text.toLowerCase().replace(" ", "-")}`
-                    }
-                    className="text-[11px] font-bold text-slate-400 hover:text-white transition-all uppercase tracking-[0.15em] flex items-center group"
-                  >
-                    <span className="w-0 group-hover:w-3 h-[2px] bg-primary transition-all mr-0 group-hover:mr-3 rounded-full" />
-                    {text}
-                  </Link>
-                </li>
-              ))}
+              <li key="Home">
+                <Link
+                  to="/"
+                  className="text-[11px] font-bold text-slate-400 hover:text-white transition-all uppercase tracking-[0.15em] flex items-center group"
+                >
+                  <span className="w-0 group-hover:w-3 h-[2px] bg-primary transition-all mr-0 group-hover:mr-3 rounded-full" />
+                  Home
+                </Link>
+              </li>
+              <li key="My Learning">
+                <Link
+                  to="/my-learning"
+                  className="text-[11px] font-bold text-slate-400 hover:text-white transition-all uppercase tracking-[0.15em] flex items-center group"
+                >
+                  <span className="w-0 group-hover:w-3 h-[2px] bg-primary transition-all mr-0 group-hover:mr-3 rounded-full" />
+                  My Learning
+                </Link>
+              </li>
+              {Authorization.isAuthenticated() ? (
+                <li key="Logout">
+                <Link
+                  to="/"
+                  className="text-[11px] font-bold text-slate-400 hover:text-white transition-all uppercase tracking-[0.15em] flex items-center group"
+                  onClick={handleLogout}
+                >
+                  <span className="w-0 group-hover:w-3 h-[2px] bg-primary transition-all mr-0 group-hover:mr-3 rounded-full" />
+                  Logout
+                </Link>
+              </li>
+              ) : (
+                <li key="Login">
+                <Link
+                  to="/login"
+                  className="text-[11px] font-bold text-slate-400 hover:text-white transition-all uppercase tracking-[0.15em] flex items-center group"
+                >
+                  <span className="w-0 group-hover:w-3 h-[2px] bg-primary transition-all mr-0 group-hover:mr-3 rounded-full" />
+                  Login
+                </Link>
+              </li>
+              )}
+
             </ul>
           </div>
 

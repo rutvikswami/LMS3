@@ -66,6 +66,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("refresh", data.refresh);
     localStorage.setItem("user", JSON.stringify(data.user));
 
+    const permissionMap: Record<string,boolean> = {};
+
+    data.user.permissions.forEach((s: string) => {
+      permissionMap[s] = true;    
+    });
+
+    localStorage.setItem(
+      "permission_map",
+      JSON.stringify(permissionMap)
+    )
+
     setUser(data.user);
   };
 

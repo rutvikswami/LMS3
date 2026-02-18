@@ -1,6 +1,7 @@
 import React, { useState, createContext, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "@/api/axios";
+
 // shadcn components
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,12 +23,6 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-/** * PROJECT IMPORTS
- * In your local project, uncomment these and remove the mock logic below.
- */
-// import api from "@/api/axios";
-
-
 
 function Register() {
   const [email, setEmail] = useState("");
@@ -35,7 +30,6 @@ function Register() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  // Logic: Unchanged as per instructions - strictly preserving your project's registration flow
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -48,21 +42,19 @@ function Register() {
 
       navigate("/login");
     } catch (err) {
-      // Logic preserved: using alert as in original source
       alert("Registration failed");
     }
   };
 
   return (
     <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 bg-slate-50/50 selection:bg-blue-100">
-      {/* Soft Background Accents */}
+
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-[10%] -left-[5%] w-[400px] h-[400px] bg-blue-100/40 rounded-full blur-[100px]" />
         <div className="absolute -bottom-[10%] -right-[5%] w-[400px] h-[400px] bg-indigo-50 rounded-full blur-[100px]" />
       </div>
 
       <div className="w-full max-w-[440px] relative z-10 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        {/* Brand/Logo Section */}
         <div className="flex flex-col items-center text-center space-y-3">
           <div className="bg-blue-600 p-3 rounded-2xl shadow-lg shadow-blue-200">
             <GraduationCap className="h-8 w-8 text-white" />
@@ -77,7 +69,7 @@ function Register() {
           </div>
         </div>
 
-        {/* Register Card */}
+
         <Card className="border-slate-200 shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden bg-white">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-xl">Sign Up</CardTitle>
@@ -89,7 +81,6 @@ function Register() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-4">
-                {/* Username Input Field */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700 ml-0.5">
                     Username

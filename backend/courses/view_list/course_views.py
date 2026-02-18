@@ -4,14 +4,11 @@ from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser, FormParser
-
-from courses.models import Chapter, Course, Section, Enrollment
+from rest_framework import filters
+from courses.models import Course, Enrollment
 from courses.serializers import (
-    ChapterSerializer,
     CourseSerializer,
     CourseDetailSerializer,
-    SectionSerializer, 
-    EnrollmentSerializer,
     CourseListSerializer,
 )
 
@@ -19,6 +16,8 @@ from accounts.utils import has_permission
 
 CREATE_COURSE = 1
 UPDATE_COURSE = 2
+ENROLL_COURSE = 5
+
 
 class CreateCourseView(generics.CreateAPIView):
     serializer_class = CourseSerializer
@@ -57,17 +56,14 @@ class CourseDetailView(generics.RetrieveAPIView):
         context["request"] = self.request
         return context
 
-
 class CourseListView(generics.ListAPIView):
     serializer_class = CourseListSerializer
     permission_classes = [permissions.AllowAny]
-
-    
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["title", "description"]
 
     def get_queryset(self):
         return Course.objects.filter(is_published = True)
-
-
 
 class MyCoursesView(generics.ListAPIView):
     serializer_class = CourseListSerializer
@@ -78,12 +74,6 @@ class MyCoursesView(generics.ListAPIView):
             creator=self.request.user
         )
 
-
-
-ENROLL_COURSE = 5
-
-
-
 class MyEnrollmentsView(generics.ListAPIView):
     serializer_class = CourseListSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -92,7 +82,6 @@ class MyEnrollmentsView(generics.ListAPIView):
         return Course.objects.filter(
             enrollments__user=self.request.user
         )
-
 
 class EnrollCourseView(APIView):
     permission_classes = [permissions.IsAuthenticated]
