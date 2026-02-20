@@ -42,6 +42,7 @@ function Register() {
 
       navigate("/login");
     } catch (err) {
+      console.log(err.response?.data)
       alert("Registration failed");
     }
   };

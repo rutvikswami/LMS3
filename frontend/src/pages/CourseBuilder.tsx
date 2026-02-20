@@ -114,7 +114,7 @@ function CourseBuilder() {
 
   const handleAddSection = async () => {
     if (!newSectionTitle.trim() || !course) return;
-    await api.post("/courses/section/create/", {
+    await api.post("/courses/section/", {
       course: course.id,
       title: newSectionTitle.trim(),
     });
@@ -123,12 +123,12 @@ function CourseBuilder() {
   };
 
   const handleUpdateSection = async (sectionId: number, title: string) => {
-    await api.patch(`/courses/section/${sectionId}/update/`, { title });
+    await api.patch(`/courses/section/${sectionId}/`, { title });
     fetchCourse();
   };
 
   const handleDeleteSection = async (sectionId: number) => {
-    await api.delete(`/courses/section/${sectionId}/delete/`);
+    await api.delete(`/courses/section/${sectionId}/`);
     fetchCourse();
   };
 
@@ -152,7 +152,7 @@ function CourseBuilder() {
   };
 
   const handleAddChapter = async (sectionId: number) => {
-    await api.post("/courses/chapter/create/", {
+    await api.post("/courses/chapter/", {
       section: sectionId,
       title: "New Chapter",
       video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -165,12 +165,12 @@ function CourseBuilder() {
     chapterId: number,
     data: Partial<Chapter>,
   ) => {
-    await api.patch(`/courses/chapter/${chapterId}/update/`, data);
+    await api.patch(`/courses/chapter/${chapterId}/`, data);
     fetchCourse();
   };
 
   const handleDeleteChapter = async (chapterId: number) => {
-    await api.delete(`/courses/chapter/${chapterId}/delete/`);
+    await api.delete(`/courses/chapter/${chapterId}/`);
     fetchCourse();
   };
 
@@ -660,6 +660,7 @@ function ChapterItem({ chapter, onUpdate, onDelete }: ChapterItemProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               placeholder="Chapter Title"
+              type="string"
               value={editData.title}
               onChange={(e) =>
                 setEditData({ ...editData, title: e.target.value })
