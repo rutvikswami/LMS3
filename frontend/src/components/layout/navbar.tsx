@@ -104,7 +104,7 @@ export default function Navbar() {
             )}
 
             {Authorization.isAuthenticated() &&
-              !Authorization.isAuthenticated("create_course") && (
+              !Authorization.isAuthorized("create_course") && (
                 <Link
                   to="/become-instructor"
                   className="text-sm font-bold text-primary hover:opacity-80 transition-opacity"
@@ -130,7 +130,7 @@ export default function Navbar() {
                   align="end"
                   className="w-56 mt-3 p-2 rounded-2xl shadow-2xl border-muted-foreground/10 animate-in fade-in zoom-in-95"
                 >
-                  {Authorization.isAuthenticated("create_course") && (
+                  {Authorization.isAuthorized("create_course") && (
                     <>
                       <div className="p-1 space-y-1">
                         <DropdownMenuItem

@@ -34,7 +34,7 @@ function CourseCard({ course, link }: Props) {
     if (link) return link;
     if (!user) return `/course/${course.id}`;
     if (
-      Authorization.isAuthenticated("create_course") &&
+      Authorization.isAuthorized("create_course") &&
       course.creator_id === user.id
     ) {
       return `/learn/${course.id}`;

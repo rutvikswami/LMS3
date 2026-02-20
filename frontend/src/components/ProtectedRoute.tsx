@@ -14,7 +14,7 @@ function ProtectedRoute({
   }
 
   // Check creator permission if required
-  if (requiredCreator && !Authorization.isAuthenticated("create_course")) {
+  if (requiredCreator && !Authorization.isAuthorized("create_course")) {
     return <Navigate to="/" />;
   }
 

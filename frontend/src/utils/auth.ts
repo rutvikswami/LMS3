@@ -5,12 +5,15 @@ class Authorization {
     return stored ? JSON.parse(stored) : {};
   }
 
-  static isAuthenticated(permission?: string): boolean {
+  static isAuthenticated(): boolean {
     const token = localStorage.getItem("access");
-    if(!token) return false;
-    if(!permission) return true;
+    return token ? true : false;
+  }
+
+  static isAuthorized(permission: string): boolean {
+    if (!this.isAuthenticated()) return false;
     const permissionMap = this.getPermissionMap();
-    return permissionMap[permission];
+    return !!permissionMap[permission];
   }
 
   static getUser() {
